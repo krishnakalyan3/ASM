@@ -1,0 +1,49 @@
+---
+title: ''
+author: "Kalyan"
+date: "11/19/2016"
+output: html_document
+---
+
+
+### Housing Dataset Doubts
+On comparing sentiment percentage with respect to different variable is see strange results boxplots.
+Question : Is it okay to compare sentiment percentage with respect to differnt variables?.
+
+```{r, echo=F}
+housing = read.csv('HousingData.csv', sep=';')
+housing$total = housing$Sentiment.Favorable + housing$Sentiment.Unfavorable
+housing$pos_sent = housing$Sentiment.Favorable/housing$total
+housing$neg_sent = housing$Sentiment.Unfavorable/housing$total
+attach(housing)
+ProximityClose = as.factor(ProximityClose)
+ContactFrequent = as.factor(ContactFrequent)
+NormaFavorable = as.factor(NormaFavorable)
+str(housing)
+par(mfrow=c(1,3))
+boxplot(pos_sent ~ ProximityClose, ylab="Sentiment Positive", xlab = "Close Proximity")
+boxplot(pos_sent ~ ContactFrequent, ylab="Sentiment Positive", xlab ="Contact Frequency")
+boxplot(pos_sent ~ NormaFavorable, ylab="Sentiment Positive", xlab = "Norm Agree and Immigration Sentiment")
+```
+
+#### Interpretation for boxplot 1
+Living close to immigrants generally does not have a huge effect on sentiment.
+Question : Here personally I would assume that if I lived close the immigrants, I would have high of low sentiment.
+
+#### Interpretation for boxplot 2
+By being in contact with immigrant one tends to have a lower positive sentiment when compared to not being in contact.
+
+#### Interpretation for boxplot 3
+People who do not agree to norms generally tend to have a higher positive sentiment to immigration.
+Question : I would assume the opposite. I am not sure if I am interpretting the data correctly.
+
+#### Interpretting model
+
+```{r}
+m = cbind(Sentiment.Favorable,Sentiment.Unfavorable)
+model = glm(m ~ ProximityClose+ContactFrequent+NormaFavorable, family = "binomial")
+summary(model)
+pchisq(2.2378, 8 - 3)
+```
+
+Question : How to use deviance and chisqure to decide if the model is good / Interpret the goodnes s of fit.
