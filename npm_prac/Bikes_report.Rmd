@@ -1,0 +1,153 @@
+---
+title: "Bikes"
+author: "Krishna Kalyan"
+date: "1/16/2017"
+output: html_document
+---
+
+```{r}
+rm(list=ls())
+library(sm)
+setwd('/Users/krishna/Downloads/exam/npm')
+load('bikes.ex.2017.Rdata')
+```
+
+Lets load the data and summarise this in formation
+
+```{r}
+ls()
+summary(bikes)
+```
+
+1. Non param regression of cnt as func of instant
+
+```{r}
+par(mfrow=c(1,1))
+h1 <- h.select(x = bikes$instant, y = bikes$cnt, method = 'cv')
+model_sm <- sm.regression(bikes$instant, bikes$cnt, h=h1)
+summary(model_sm)
+```
+
+a)
+
+- Estimate $50$ 
+- bandwidth $28.16626$
+
+b)
+
+
+
+- 
+2. 
+
+a)
+
+```{r}
+par(mfrow=c(1,3))
+bikes0 <- bikes[bikes$yr == 0,]
+bikes1 <- bikes[bikes$yr == 1,]
+m0 <- sm.regression(x=bikes0$dayyr, y=bikes0$cnt)
+m1 <- sm.regression(x=bikes1$dayyr, y=bikes1$cnt)
+
+bikes$yr <- as.factor(bikes$yr)
+sm.ancova(x = bikes$dayyr, y = bikes$cnt, group = bikes$yr, model = "equal")
+
+
+```
+
+```{r}
+par(mfrow=c(1,3))
+library(mgcv)
+attach(bikes)
+#gam2.1 <- gam
+
+
+```
+
+2b.
+
+```{r}
+par(mfrow=c(1,1))
+model_m <- sm.ancova(x = bikes$dayyr, y = bikes$cnt, group = bikes$yr, h=1, model = "parallel")
+```
+
+3. Use gam and anova, fit several models
+
+```{r}
+model1 <- gam(cnt~yr,data=bikes)
+model2 <- gam(cnt~weekday,data=bikes)
+model3 <- gam(cnt~temp,data=bikes)
+model4 <- gam(cnt~yr + weekday,data=bikes)
+model5 <- gam(cnt~yr + weekday + temp,data=bikes)
+model6 <- gam(cnt~yr + (weekday * temp),data=bikes)
+model7 <- gam(cnt ~ yr + weekday + s(temp)+ s(hum), data=bikes)
+model8 <- gam(cnt ~ yr + weekday + s(temp, hum), data=bikes)
+
+anova(model1,model2, test="F")
+anova(model2,model3, test="F")
+anova(model4,model5, test="F")
+anova(model5,model6, test="F")
+anova(model6, model7, test="F")
+anova(model6, model8, test="F")
+```
+
+My best model is model8 which has a deviance of 21.
+
+4. Use Splines
+
+a) Range which larger than 5
+
+```{r}
+source('IRWLS_logistic_regression.R')
+str(bikes)
+func.cnt <- function(x){
+  if(x>=5000){
+    return(1)
+  }else{
+    return(0)
+  }
+}
+
+cnt.500 <- sapply(bikes$cnt,func.cnt)
+model_spline <- logistic.IRWLS.splines(x=bikes$temp,y=cnt.500,df=6)
+
+range(bikes$temp[model_spline$predicted.values > 0.5])
+```
+
+b) Do cross validation
+
+```{r}
+generate_degrees <- 3:15
+k <-5
+data <- data.frame(cnt.500,bikes$temp)
+names(data) <- c('cnt', 'temp')
+kfold <- function(data, k = 5, df=1){
+  data <- data[sample(nrow(data)),]
+  folds <- cut(seq(1,nrow(data)),breaks=k,labels=FALSE)
+  avg.fold <- c()
+  for(i in 1:k){
+    testIndexes <- which(folds==1,arr.ind=TRUE)
+    test <- data[testIndexes, ]
+    train <- data[-testIndexes, ]
+    error <- model(train,test, df)
+    avg.fold <- c(avg.fold, error)
+  }
+  return(mean(avg.fold))
+}
+
+model <- function(train,test,df){
+  model_spline <- logistic.IRWLS.splines(x=train$temp,y=as.matrix(train$cnt),df=6)
+  yhat <- model_spline$predicted.values
+  sqrd_error <- (train$cnt - yhat)^2
+  return(mean(sqrd_error))
+}
+
+error_mat <- matrix(data=NA,nrow<-length(generate_degrees),ncol<-2)
+for(i in 1:length(generate_degrees)){
+  error <- kfold(data,df=i)
+  error_mat[i,]<-(c(error, generate_degrees[i]))
+}
+index <- which.min(error_mat[,1])
+error_mat[index,]
+```
+We get the best error with df 8

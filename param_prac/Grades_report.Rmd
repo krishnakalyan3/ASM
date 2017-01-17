@@ -1,0 +1,150 @@
+---
+title: "Grades"
+author: "Krishna Kalyan"
+date: "1/16/2017"
+output: html_document
+---
+
+We were give grades data set and lets load it up in R. 
+
+```{r}
+rm(list=ls())
+setwd('/Users/krishna/Downloads/exam/param')
+load('Grades.Rdata')
+Grades <- data.frame(Grades)
+```
+
+We begin by doing a summary on our dataset to understand the data better.
+
+```{r}
+dim(Grades)
+summary(Grades)
+```
+
+We observe that our has $200$ observations and $2$ columns. We see that sat scores vary from $720$ to $1150$ and gpa varys from $0.790$ to $3.840$. We also observe that our data set are in different scales.
+
+We would also like to see the distribution of our dataset.
+
+```{r}
+par(mfrow=c(1,2))
+plot(Grades$gpa, col='red', pch=19)
+plot(Grades$sat, col='blue', pch=19)
+```
+
+We observe that the dataset are randomly distributed. It would not make sense transforming it. 
+
+1. Scatter plot and observation
+
+```{r}
+par(mfrow=c(1,1))
+plot(Grades,col='blue', pch=19, main='Scatter plot GPA vs SAT')
+```
+
+We observe that our data has a linear positive trend. We can also observe that there are few extreme points. Knowing this like to know the correlation value and also create a box plots for my observations.
+
+
+```{r}
+par(mfrow=c(1,2))
+model1 <- lm(gpa~sat, data=Grades)
+summary(model1)
+cor(Grades)
+boxplot(Grades$gpa, main='GPA')
+boxplot(Grades$sat, main='SAT')
+```
+
+We can say that our data is positively correlated $0.74$. I think this is in the higher side. Also with the box plots, I observe that GPA has more outlier values.
+
+2. Model used with hyphothesis.
+Based on the patterns observed in my data I see that there is a linear relationship between my response and predictors. I will use a `Linear Model` to analyse this data.
+I will model my respone $GPA$ as a function of my predictor $SAT$. This can be also expressed as below.
+$GPA ~ SAT$
+
+```{r}
+model_lm <- lm(gpa~sat, data=Grades)
+summary(model_lm)
+```
+
+Based on the summary of the model, I conclude that it is not a very good model as I observe an $R^2$ of $0.56$ and see that $sat$ is a significant variable in my model with `p-value` less than $0.001$.
+
+Ho : Our model fit the data well
+H1 : Model does not represnt the data
+
+We reject Ho as we see that the `p-value` is only $2.2e-16$ and see if we can improve this model.
+
+3. Expected change in mean GPA when sat score inc by 50.
+```{r}
+gpa <- -1.192 + 0.003 * 50 
+gpa
+# I am not sure of this answer above
+
+# Or it could be 50 multiplied by it coefficient
+50 * 0.003
+```
+
+4. Coeffieceint of sat.
+
+```{r}
+model_lm$coefficients[2]
+```
+
+The value of sat is very small. Is it statistically different from zero. No because when its multiplied from grade it seems to have a positive value over all.
+
+5. Interpretation of Residual standard error.
+
+Residual standard error is exactly 0 then the model fits the data perfectly. $0.3994$ tells me that we dont have a very good model. 
+Residual can be calculated from the formual below.
+(y - yhat)
+
+6. Intepret Multiple R square.
+
+$0.5612$ is the value in the multiple R squared. Higher the value the better ($1$ is the best). We can say again here that we dont have a very good model. $R^2$ can be interpreted as the percentage of variance in the dependent variable that can be explained by the predictors.
+
+7. Obtain confidence Intervals
+
+```{r}
+conf <- confint(model_lm,level = 0.95)
+(conf)
+```
+
+8. Predicted Values
+
+```{r}
+values <- c(40, 152,196)
+conf <- confint(model_lm,level = 0.95)
+pred <- predict(model_lm, Grades)
+pred[values]
+```
+
+We see that our predicted values are bad. Its always underestimating or giving us low values for sat.
+
+9. Check model with plots. 
+```{r}
+par(mfrow=c(2,2))
+plot(model_lm)
+```
+
+- Our residuals are normally distributed (QQ plot has a straight line)
+- We observe not trend in the residual vs fitted plot. Hence we can our residuals are independnet.
+- Homoscedasticity can be see in the residual vs leverage plot. We see a conic shape or any kind of shape which I think is bad from what I remember.
+
+10. 
+```{r}
+anova(model_lm)
+```
+We can say that sat is a significant variable.
+
+11. Large Residuals
+
+```{r}
+big_res <- which.max(model_lm$residuals) #this is the index
+Grades[big_res,]
+model_lm$residuals[big_res]
+```
+
+12. Analysis for conclusion
+
+We dont have a very good model here. We can say that our model has not so good R^2 and there might be some unseen data that can better expain the response gpa.
+
+13. Can the model be improved.
+
+Yes the model can be improved by adding speaking to a domain expert and seeking for varible that can explain our model better. For example number of hours studied.

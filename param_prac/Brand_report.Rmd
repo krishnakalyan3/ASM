@@ -1,0 +1,49 @@
+---
+title: "Brand"
+author: "Krishna Kalyan"
+date: "1/16/2017"
+output: html_document
+---
+
+```{r}
+brand_1 <- c(100, 96, 92, 96, 92)
+brand_2 <- c(76, 80, 75, 84, 82)
+brand_3 <- c(108, 100, 96, 98, 100)
+data <- data.frame(brand_1, brand_2, brand_3)
+```
+
+Lets load the data as a dataframe
+
+
+
+```{r}
+par(mfrow=c(1,3))
+summary(data)
+
+hist(brand_1)
+hist(brand_2)
+hist(brand_3)
+```
+
+
+```{r}
+max <- max(brand_3)
+
+plot(brand_1, ylim=c(60,max))
+lines(brand_1, ylim=c(60,max))
+points(brand_2, ylim=c(60,max), col="green")
+lines(brand_2, ylim=c(60,max), col="green")
+points(brand_3, ylim=c(60,max), col="red")
+lines(brand_3, ylim=c(60,120), col="red")
+```
+
+We observe that band 1 and band 3 are similar in nature
+
+```{r}
+mean(brand_1)
+mean(brand_3)
+var(brand_1)
+var(brand_3)
+```
+I wish I had more time to work on this. I would recommend band 3 as it tends to have higher duration values. But we see that it has a higher variance. So this is not so good.
+I can recommend band 1 as it has a variance of $11.2$ which is the lowest in all bands and also has higher performance in duration.
